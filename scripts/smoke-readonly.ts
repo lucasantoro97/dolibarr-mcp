@@ -1,40 +1,11 @@
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { loadDolibarrEnv } from '../src/config.js';
 
 type JsonObject = Record<string, unknown>;
-
-function readJson(filePath: string): JsonObject | undefined {
-  try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf8')) as JsonObject;
-  } catch {
-    return undefined;
-  }
-}
-
-function loadEnv(): Record<string, string> {
-  const env: Record<string, string> = {};
-  for (const [key, value] of Object.entries(process.env)) {
-    if (value !== undefined) env[key] = value;
-  }
-
-  if (!env.DOLIBARR_BASE_URL || !env.DOLIBARR_API_KEY) {
-    const mcp = readJson(path.join(os.homedir(), '.mcp.json'));
-    const servers = mcp?.mcpServers as JsonObject | undefined;
-    const dolibarr = servers?.dolibarr as JsonObject | undefined;
-    const configuredEnv = dolibarr?.env as JsonObject | undefined;
-    for (const [key, value] of Object.entries(configuredEnv ?? {})) {
-      if (typeof value === 'string') env[key] = value;
-    }
-  }
-
-  if (!env.DOLIBARR_BASE_URL) throw new Error('DOLIBARR_BASE_URL is required');
-  if (!env.DOLIBARR_API_KEY) throw new Error('DOLIBARR_API_KEY is required');
-  return env;
-}
 
 function textOf(result: { content?: Array<{ type: string; text?: string }>; isError?: boolean }) {
   return result.content?.map((item) => item.text ?? '').join('\n') ?? '';
@@ -66,7 +37,7 @@ async function main() {
   const transport = new StdioClientTransport({
     command: 'node',
     args: [serverPath],
-    env: loadEnv(),
+    env: loadDolibarrEnv(),
   });
 
   await client.connect(transport);

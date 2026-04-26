@@ -3,6 +3,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { DolibarrApi } from './api.js';
+import { describeDolibarrConfig, loadDolibarrConfig } from './config.js';
 
 import * as thirdparties from './tools/thirdparties.js';
 import * as contacts from './tools/contacts.js';
@@ -33,7 +34,8 @@ const server = new McpServer(
   },
 );
 
-const api = new DolibarrApi();
+const config = loadDolibarrConfig();
+const api = new DolibarrApi(config);
 
 thirdparties.register(server, api);
 contacts.register(server, api);
@@ -59,4 +61,4 @@ rawApi.register(server, api);
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-console.error('Dolibarr MCP server running on stdio');
+console.error(`Dolibarr MCP server running on stdio (${describeDolibarrConfig(config)})`);

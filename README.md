@@ -7,8 +7,11 @@ MCP server for the Dolibarr ERP REST API. It exposes typed tools for common Doli
 ```bash
 npm install
 npm run build
-DOLIBARR_BASE_URL=https://your-dolibarr.example.com DOLIBARR_API_KEY=... npm start
+cp .env.example .env
+npm start
 ```
+
+Set `DOLIBARR_BASE_URL` and `DOLIBARR_API_KEY` in `.env`, in the process environment, or in your MCP client config.
 
 For Codex or Claude Desktop, point the MCP server command to:
 
@@ -21,7 +24,7 @@ with these environment variables:
 - `DOLIBARR_BASE_URL`: Dolibarr host, with or without `/api/index.php`
 - `DOLIBARR_API_KEY`: Dolibarr API key
 
-Do not commit API keys. Use environment variables or your MCP client secret configuration.
+Credential source order is: process environment, repo-local `.env`, then `~/.mcp.json` under `mcpServers.dolibarr.env`. Do not commit API keys. Use `.env`, environment variables, or your MCP client secret configuration.
 
 ## Tool Coverage
 
@@ -57,7 +60,7 @@ Live read-only smoke test:
 npm run smoke:readonly
 ```
 
-This starts the built MCP server, lists tools, fetches the API schema, and calls representative read-only tools against a real Dolibarr instance. It reads `DOLIBARR_BASE_URL` and `DOLIBARR_API_KEY` from the environment, or from `~/.mcp.json` if present.
+This starts the built MCP server, lists tools, fetches the API schema, and calls representative read-only tools against a real Dolibarr instance. It reads `DOLIBARR_BASE_URL` and `DOLIBARR_API_KEY` from the same source order as the server.
 
 ## Safety
 

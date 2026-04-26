@@ -1,5 +1,9 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
+import { loadDolibarrConfig } from '../src/config.js';
 import * as thirdparties from '../src/tools/thirdparties.js';
 import * as contacts from '../src/tools/contacts.js';
 import * as products from '../src/tools/products.js';
@@ -73,6 +77,41 @@ class FakeApi {
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
+
+const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dolibarr-mcp-test-'));
+const envPath = path.join(tempDir, '.env');
+const configPath = path.join(tempDir, '.mcp.json');
+
+fs.writeFileSync(envPath, 'DOLIBARR_BASE_URL=https://from-dotenv.example.com\nDOLIBARR_API_KEY=dotenv-key\n');
+fs.writeFileSync(
+  configPath,
+  JSON.stringify({
+    mcpServers: {
+      dolibarr: {
+        env: {
+          DOLIBARR_BASE_URL: 'https://from-mcp.example.com',
+          DOLIBARR_API_KEY: 'mcp-key',
+        },
+      },
+    },
+  }),
+);
+
+const dotenvConfig = loadDolibarrConfig({ env: {}, envPath, configPath });
+assert(dotenvConfig.baseURL === 'https://from-dotenv.example.com', 'Local .env should provide Dolibarr base URL');
+assert(dotenvConfig.apiKey === 'dotenv-key', 'Local .env should provide Dolibarr API key');
+
+const envConfig = loadDolibarrConfig({
+  env: { DOLIBARR_BASE_URL: 'https://from-env.example.com', DOLIBARR_API_KEY: 'env-key' },
+  envPath,
+  configPath,
+});
+assert(envConfig.baseURL === 'https://from-env.example.com', 'Process env should override local .env');
+assert(envConfig.apiKey === 'env-key', 'Process env API key should override local .env');
+
+const mcpConfig = loadDolibarrConfig({ env: {}, envPath: path.join(tempDir, 'missing.env'), configPath });
+assert(mcpConfig.baseURL === 'https://from-mcp.example.com', '~/.mcp.json fallback should provide base URL');
+assert(mcpConfig.apiKey === 'mcp-key', '~/.mcp.json fallback should provide API key');
 
 const server = new FakeServer();
 const api = new FakeApi();
@@ -157,5 +196,5 @@ assert((api.calls.at(-1)?.body as Record<string, unknown>).product_id === 9, 'St
 console.log(JSON.stringify({
   status: 'ok',
   toolCount: server.tools.size,
-  checked: ['unique names', 'descriptions', 'raw GET normalization', 'raw write confirmation', 'raw body passthrough', 'Swagger summary', 'Dolibarr endpoint/field mappings'],
+  checked: ['credential source fallback', 'unique names', 'descriptions', 'raw GET normalization', 'raw write confirmation', 'raw body passthrough', 'Swagger summary', 'Dolibarr endpoint/field mappings'],
 }, null, 2));

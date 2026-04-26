@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
+import { loadDolibarrConfig, type DolibarrConfig } from './config.js';
 
 export type DolibarrHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
@@ -22,12 +23,8 @@ export class DolibarrApi {
   private client: AxiosInstance;
   private apiPrefix: string;
 
-  constructor() {
-    const baseURL = process.env.DOLIBARR_BASE_URL;
-    const apiKey = process.env.DOLIBARR_API_KEY;
-
-    if (!baseURL) throw new Error('DOLIBARR_BASE_URL is required');
-    if (!apiKey) throw new Error('DOLIBARR_API_KEY is required');
+  constructor(config: DolibarrConfig = loadDolibarrConfig()) {
+    const { baseURL, apiKey } = config;
 
     const normalizedBaseURL = baseURL.replace(/\/+$/, '');
     this.apiPrefix = /\/api\/index\.php$/i.test(normalizedBaseURL) ? '' : '/api/index.php';
