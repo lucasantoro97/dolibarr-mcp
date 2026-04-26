@@ -1,0 +1,26 @@
+{
+  "name": "dolibarr-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "MCP server for Dolibarr ERP REST API",
+  "bin": "./build/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build && npm run test:unit",
+    "test:unit": "tsx scripts/test-tool-registry.ts",
+    "smoke:readonly": "tsx scripts/smoke-readonly.ts",
+    "start": "node build/index.js",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "axios": "^1.8.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.12.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
